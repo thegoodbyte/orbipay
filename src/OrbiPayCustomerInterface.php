@@ -89,7 +89,7 @@ interface OrbiPayCustomerInterface
 
     public function setCustomerAccount(CustomerAccount $customerAccount);
 
-    public function getCustomer();
+    public function getCustomer(OrbiPayRequestInterface $OrbiPayRequest);
 
 
 }

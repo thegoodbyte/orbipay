@@ -6,7 +6,7 @@
  * Time: 11:53 AM
  */
 
-namespace mhalla\OrbiPay;
+namespace thegoodbyte\orbipay;
 
 
 interface OrbiPayRequestInterface

@@ -600,9 +600,9 @@ class Customer implements OrbiPayCustomerInterface
        // $OrbiPayRequest->
     }
 
-    public function getCustomer()
+    public function getCustomer(OrbiPayRequestInterface $OrbiPayRequest)
     {
-        $OrbiPayRequest = new OrbiPayRequest();
+       // $OrbiPayRequest = new OrbiPayRequest();
 
         $customerId         = '16614027';
 
@@ -616,8 +616,34 @@ class Customer implements OrbiPayCustomerInterface
 
         $OrbiPayRequest->setHeaderContentType(OrbipayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
 
+        print_r($OrbiPayRequest);
+
         $response = $OrbiPayRequest->callApi();
 
         return $response;
+    }
+
+    public function listFundingAccounts(OrbiPayRequestInterface $or)
+    {
+        //POST /customers/{ID_CUSTOMER}/fundingaccounts/lists
+        $customerId = '16614027';
+        $input['uri'] = '/payments/v1/customers/' . $customerId . '/fundingaccounts/lists';
+
+        $input['method'] = 'POST';
+
+        $input['headerRequestor'] = $customerId;
+
+        $input['headerConntentType'] = OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_FORM_URL_ENCODED;
+
+        $input['payload'] = [];
+
+        $input['isMultiPartRequest'] = true;
+
+
+
+        $response = $or->doCallApi($input);
+
+        dd($response);
+
     }
 }

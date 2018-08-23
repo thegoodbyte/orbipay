@@ -83,6 +83,8 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     private $_clientKey = '';
     private $_headerConntentType = self::HEADER_CONTENT_TYPE_APPLICATION_JSON;
 
+    private $isMultiPartRequest = false;
+
     /**
      * @var string
      *
@@ -94,16 +96,14 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     private $_debugRequest = [];
 
 
-    public function __construct()
+    public function __construct($signatureKey = null, $partnerId = null)
     {
-        echo '<pre />';
 
-        $this->_password = env('UMB_SIGNATURE_KEY');
-        $this->_clientKey = env('UMB_PARTNER_ID');
 
-        if (empty ($this->_password) || (empty($this->_clientKey))) {
-            throw new Exception('Empty OrbiPay password or client ID');
-        }
+
+        $this->setCredentials($signatureKey, $partnerId);
+
+        //$this->checkCredentials();
 
         // this header is good for the signature
         // when submitting, do not send accept, content-type and authentication
@@ -120,6 +120,29 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
         ];
     }
 
+    public function printCreds()
+    {
+        print_r([
+            $this->_clientKey,
+            $this->_password
+        ]);
+    }
+
+    private function checkCredentials()
+    {
+        if (empty ($this->_password) || (empty($this->_clientKey))) {
+            throw new \Exception('Empty OrbiPay password or client ID');
+        }
+    }
+
+    public function setCredentials($signatureKey, $partnerId)
+    {
+        $this->_password =  $signatureKey;//env('UMB_SIGNATURE_KEY');
+        $this->_clientKey = $partnerId;// env('UMB_PARTNER_ID');
+
+        print_r($this->_password);
+    }
+
 
     /**
      * @param $input
@@ -131,6 +154,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
      */
     private function calculateSignature($input, $password)
     {
+        $this->checkCredentials();
         return base64_encode(hash_hmac('sha256', $input, $password, true));
     }
 
@@ -142,6 +166,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
      */
     public function getSignatureHeaders()
     {
+        $this->checkCredentials();
         // override the requestor so it is part of the signature
         // and we do not get the 401
         $this->_headers['requestor'] = $this->_headerRequetor;
@@ -161,11 +186,13 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
     private function getSignatureQueryString()
     {
+        $this->checkCredentials();
         return $this->_queryString;
     }
 
     private function getSignatureInput()
     {
+        $this->checkCredentials();
         $input = $this->_method . ':' . $this->_uri . ':' . $this->getSignatureQueryString() . ':' .
             $this->getSignatureHeaders() . ':' . $this->getSignaturePayload();
 
@@ -175,6 +202,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
     private function getSignaturePayload()
     {
+        $this->checkCredentials();
         return json_encode($this->_payload);
     }
 
@@ -186,6 +214,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
      */
     private function getAuthHeaderString($signature)
     {
+        $this->checkCredentials();
         return 'OPAY1-HMAC-SHA256 Credential=' . $this->_clientKey . ',Signature=' . $signature;
     }
 
@@ -193,7 +222,8 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     private function makeGuzzleRequest()
     {
 
-        if (empty($this->_uri))
+        $this->checkCredentials();
+
         $this->_url = self::URL . $this->_uri . $this->_queryString;
 
         $client = new Client(['base_uri' => $this->_url]);
@@ -212,6 +242,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
         ];
 
+       // dd($this->_debugRequest);
 
         $response = null;
         try {
@@ -243,6 +274,8 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
     private function buildSignature()
     {
+        $this->checkCredentials();
+
         $this->_signature = $this->calculateSignature($this->getSignatureInput(), $this->_password);
     }
 
@@ -253,6 +286,8 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
      */
     private function buildRequestHeaders()
     {
+        $this->checkCredentials();
+
         $this->buildSignature();
         $headers = $this->_headers;
 
@@ -403,7 +438,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
         $this->_headerConntentType = self::HEADER_CONTENT_TYPE_APPLICATION_JSON;
 
-        $this > $this->_payload = [];
+        $this->_payload = [];
 
         $this->makeGuzzleRequest();
     }
@@ -978,7 +1013,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
     public function callApi()
     {
-
+        return $this->makeGuzzleRequest();
     }
 
 
@@ -1003,6 +1038,58 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
         $this->_headerConntentType  = $headerContentType;
     }
 
+
+    public function __toString()
+    {
+        $data = get_class_vars($this);
+
+        return json_encode($data);
+    }
+
+
+    public function doCallApi($input)
+    {
+        if (empty($input['uri'])) {
+            throw new \Exception('Missing URI input');
+        } else {
+            $this->setUri($input['uri']);
+        }
+
+        if (empty($input['method'])) {
+            throw new \Exception('Missing URI input');
+        } else {
+            $this->_method = $input['method'];
+        }
+
+        if (empty($input['headerRequestor'])) {
+            throw new \Exception('Missing Header Requestor input');
+        } else {
+            $this->_headerRequetor = $input['headerRequestor'];
+        }
+
+        if (empty($input['headerConntentType'])) {
+            throw new \Exception('Missing URI input');
+        } else {
+            $this->_headerConntentType  = $input['headerConntentType'];
+        }
+
+        if (!isset($input['payload'])) {
+                throw new \Exception('Missing Payload input');
+        } else {
+            $this->_payload =  $input['payload'];
+        }
+
+        if (!isset($input['isMultiPartRequest'])) {
+            throw new \Exception('Missing MultipartRequest input');
+        } else {
+            $this->isMultiPartRequest =  $input['isMultiPartRequest'];
+        }
+
+
+
+
+        $this->callApi();
+    }
 
 }
 
