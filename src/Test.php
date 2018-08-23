@@ -1,9 +1,4 @@
 <?php
-
-namespace thegoodbyte\orbipay
-
-class Test
-{
-
-
+namespace thegoodbyte/orbipay;
+class Test {
 }
