@@ -99,8 +99,6 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     public function __construct($signatureKey = null, $partnerId = null)
     {
 
-
-
         $this->setCredentials($signatureKey, $partnerId);
 
         //$this->checkCredentials();
@@ -140,7 +138,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
         $this->_password =  $signatureKey;//env('UMB_SIGNATURE_KEY');
         $this->_clientKey = $partnerId;// env('UMB_PARTNER_ID');
 
-        print_r($this->_password);
+        //print_r($this->_password);
     }
 
 
@@ -242,7 +240,8 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
         ];
 
-       // dd($this->_debugRequest);
+        echo __FILE__ .  ' ' . __LINE__ . '<br />';
+        print_r($this->_debugRequest);
 
         $response = null;
         try {
@@ -1011,10 +1010,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
     }
 
-    public function callApi()
-    {
-        return $this->makeGuzzleRequest();
-    }
+
 
 
     public function setUri($uri) {
@@ -1047,8 +1043,12 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     }
 
 
-    public function doCallApi($input)
+    public function callApi($input)
     {
+//
+//        echo __FILE__ . ' ' . __LINE__;
+//        print_r($input);
+//        exit;
         if (empty($input['uri'])) {
             throw new \Exception('Missing URI input');
         } else {
@@ -1088,7 +1088,170 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
 
 
-        $this->callApi();
+        $this->makeGuzzleRequest();
+    }
+
+    public static function staticMakeRequest($input)
+    {
+
+        $clientKey = env('UMB_PARTNER_ID');
+        $password = env('UMB_SIGNATURE_KEY');
+
+        $url = self::URL . $input['uri'] . $input['queryString'];
+
+        $client = new Client(['base_uri' => $url]);
+
+        $headers = self::staticGetHeaders($input['headerRequestor'], $clientKey);
+
+        $signatureInput = self::staticGetSignatureInput($headers, $input);
+
+        $signature = self::staticBuildSignature($signatureInput, $password);
+
+        $requestHeaders = self::staticBuildRequestHeaders($input, $signatureInput, $password , $clientKey);
+
+
+
+        $debugRequest = [
+            'url'               => $url,
+            'payload'           => $input['payload'],
+            'input'             => $signatureInput,
+            'signature'         => $signature,
+            'headers'           => $requestHeaders,
+            'signatureHeaders'  => static::staticGetSignatureHeaders($headers, $input),
+            'authHeader'        => self::staticGetAuthHeaderString($signature, $clientKey),
+            'allHeaders'        => $headers
+
+        ];
+
+        echo __FILE__ .  ' ' . __LINE__ . '<br />';
+        print_r($debugRequest);
+
+        $response = null;
+        try {
+
+            $response = $client->request(
+                $input['method'],
+                $url, [
+                'body' => self::staticGetSignaturePayload($signature, $password),
+                'headers' => $headers
+            ]);
+
+            $body = ($response->getBody());
+
+            print_r(json_decode($body->getContents()));
+
+            return $response->getBody()->getContents();
+
+            // $response =   $this->doCurlPostRequest($this->_url, $headers);
+        } catch (ClientException $ce) {
+
+            echo 'Client Exception ' . $ce->getMessage();
+        } catch (Exception $e) {
+            echo $e->getMessage();
+        }
+
+        print_r($debugRequest);
+    }
+
+
+    private static function staticBuildRequestHeaders( $input, $signatureInput, $password, $clientKey)
+    {
+
+
+
+        $signature = self::staticBuildSignature($signatureInput, $password);
+        $headers = self::staticGetHeaders($input['headerRequestor'], $clientKey);
+
+        $headers['Authorization']   = self::staticGetAuthHeaderString($signature, $clientKey);
+        $headers['Accept']          = self::HEADER_CONTENT_TYPE_APPLICATION_JSON;
+        $headers['Content-Type']    = $input['headerContentType'];
+
+        return $headers;
+    }
+
+
+    public static function staticGetHeaders($headerRequestor, $clientKey)
+    {
+        $headers = [
+            'channel'                   => self::ORBIPAY_CHANNEL,
+            'product'                   => self::ORBIPAY_PRODUCT_PAYMENTS,
+            'timestamp'                 => date('Y-m-d H:i:s') . '.000 -0400',//'03/27/2018 13:16:30:111',
+            'idempotent_request_key'    => md5(rand()), // must be different every time
+            'requestor'                 => $headerRequestor, //'guest', // hardcoded to guest
+            'requestor_type'            => self::ORBIPAY_REQUESTOR_TYPE_CUSTOMER, // Could also user => Client Agent
+            'client_key'                => $clientKey
+
+        ];
+
+        return $headers;
+    }
+
+    private static function staticBuildSignature($signatureInput, $password)
+    {
+
+
+        $signature = self::staticCalculateSignature($signatureInput, $password);
+
+        return $signature;
+    }
+
+    private static function staticGetAuthHeaderString($signature, $clientKey)
+    {
+
+        return 'OPAY1-HMAC-SHA256 Credential=' . $clientKey . ',Signature=' . $signature;
+    }
+
+    private static function staticCalculateSignature($input, $password)
+    {
+
+        return base64_encode(hash_hmac('sha256', $input, $password, true));
+    }
+
+    private static function staticGetSignatureInput($headers, $input)
+    {
+
+        $input = $input['method'] . ':' . $input['uri'] . ':' . self::staticGetSignatureQueryString($input) . ':' .
+            self::staticGetSignatureHeaders($headers, $input) . ':' . self::staticGetSignaturePayload($input['payload']);
+
+        return $input;
+    }
+
+    private static function staticGetSignatureQueryString($input)
+    {
+
+        return $input['queryString'];
+
+    }
+
+    private static function staticGetSignatureHeaders($headers, $input)
+    {
+
+        // override the requestor so it is part of the signature
+        // and we do not get the 401
+        $headers['requestor'] = $input['headerRequestor'];
+
+        //sort the array
+        ksort($headers);
+        $string = '';
+
+        foreach ($headers as $key => $value) {
+            $string .= $key . '=' . $value . '&';
+        }
+        // remove the last ampersand
+        $string = substr($string, 0, strlen($string) - 1);
+
+        return $string;
+    }
+
+
+    private static function staticGetSignaturePayload($payload)
+    {
+
+
+
+
+
+        return json_encode(($payload));
     }
 
 }
