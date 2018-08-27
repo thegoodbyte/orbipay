@@ -263,8 +263,11 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
         } catch (ClientException $ce) {
 
             echo 'Client Exception ' . $ce->getMessage();
+
+            print_r($ce->getResponse()->getBody()->getContents());
         } catch (Exception $e) {
             echo $e->getMessage();
+            print_r($ce->getResponse()->getBody()->getContents());
         }
 
         print_r($this->_debugRequest);

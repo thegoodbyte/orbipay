@@ -190,8 +190,7 @@ class FundingAccount implements OrbiPayFundingAccountInterface
                 throw new \Exception("Payload field 'address.$field' is empty or missing");
             }
         }
-
-
+        
     }
 
 }
