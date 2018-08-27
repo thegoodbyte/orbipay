@@ -198,9 +198,15 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     }
 
 
+    /**
+     * @return string
+     */
     private function getSignaturePayload()
     {
-        $this->checkCredentials();
+        // send no payload if the request is GET
+        if (strtoupper($this->_method) == 'GET') {
+            return '';
+        }
         return json_encode($this->_payload);
     }
 
@@ -219,9 +225,6 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
     private function makeGuzzleRequest()
     {
-
-        $this->checkCredentials();
-
         $this->_url = self::URL . $this->_uri . $this->_queryString;
 
         $client = new Client(['base_uri' => $this->_url]);
@@ -240,20 +243,28 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
         ];
 
-        echo __FILE__ .  ' ' . __LINE__ . '<br />';
-        print_r($this->_debugRequest);
 
         $response = null;
         try {
 
-            $response = $client->request(
-                $this->_method,
-                $this->_url, [
-                'body' => $this->getSignaturePayload(),
+            $guzzleOptions = [
                 'headers' => $headers
-            ]);
+            ];
+
+            if ($this->isMultiPartRequest == true) {
+                $guzzleOptions['multipart'] = $this->getMultipartPayload();
+            } else {
+                $guzzleOptions['body'] = $this->getSignaturePayload();
+            }
+
+            //dd($guzzleOptions);
+
+
+            $response = $client->request($this->_method, $this->_url, $guzzleOptions);
 
             $body = ($response->getBody());
+
+            print_r($this->_debugRequest);
 
             print_r(json_decode($body->getContents()));
 
@@ -263,21 +274,35 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
         } catch (ClientException $ce) {
 
             echo 'Client Exception ' . $ce->getMessage();
-
-            print_r($ce->getResponse()->getBody()->getContents());
         } catch (Exception $e) {
             echo $e->getMessage();
-            print_r($ce->getResponse()->getBody()->getContents());
         }
 
-        print_r($this->_debugRequest);
+
+    }
+
+    private function getMultipartPayload()
+    {
+        //dd($this->_payload);
+        $payload =  $this->_payload;
+        $payload['contents'] = 'test';
+        $payload['name'] = 'test';
+
+        $multipart = [];
+
+        $index = 0;
+        foreach ($this->_payload as $key => $value) {
+            $multipart[$index]['name']       = $key;
+            $multipart[$index]['contents']   = $value;
+            $index++;
+        }
+
+        return $multipart;
     }
 
 
     private function buildSignature()
     {
-        $this->checkCredentials();
-
         $this->_signature = $this->calculateSignature($this->getSignatureInput(), $this->_password);
     }
 
@@ -1053,7 +1078,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 //        print_r($input);
 //        exit;
         if (empty($input['uri'])) {
-            throw new \Exception('Missing URI input');
+            throw new \Exception('Missing URI input - right here');
         } else {
             $this->setUri($input['uri']);
         }
@@ -1070,10 +1095,10 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
             $this->_headerRequetor = $input['headerRequestor'];
         }
 
-        if (empty($input['headerConntentType'])) {
-            throw new \Exception('Missing URI input');
+        if (empty($input['headerContentType'])) {
+            throw new \Exception('Missing headerContentType');
         } else {
-            $this->_headerConntentType  = $input['headerConntentType'];
+            $this->_headerConntentType  = $input['headerContentType'];
         }
 
         if (!isset($input['payload'])) {
@@ -1082,10 +1107,12 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
             $this->_payload =  $input['payload'];
         }
 
-        if (!isset($input['isMultiPartRequest'])) {
-            throw new \Exception('Missing MultipartRequest input');
-        } else {
+        if (isset($input['isMultiPartRequest'])) {
+
+
             $this->isMultiPartRequest =  $input['isMultiPartRequest'];
+        } else {
+            $this->isMultiPartRequest = true;
         }
 
 
@@ -1119,15 +1146,16 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
             'payload'           => $input['payload'],
             'input'             => $signatureInput,
             'signature'         => $signature,
-            'headers'           => $requestHeaders,
+            'headers'           => $headers,
             'signatureHeaders'  => static::staticGetSignatureHeaders($headers, $input),
             'authHeader'        => self::staticGetAuthHeaderString($signature, $clientKey),
-            'allHeaders'        => $headers
+            'allHeaders'        => $requestHeaders,
+            'method'            => $input['method']
 
         ];
 
-        echo __FILE__ .  ' ' . __LINE__ . '<br />';
-        print_r($debugRequest);
+//        echo __FILE__ .  ' ' . __LINE__ . '<br />';
+//        print_r($debugRequest);
 
         $response = null;
         try {
@@ -1141,9 +1169,9 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
             $body = ($response->getBody());
 
-            print_r(json_decode($body->getContents()));
+            //print_r(json_decode($body->getContents()));
 
-            return $response->getBody()->getContents();
+            return json_decode($response->getBody()->getContents());
 
             // $response =   $this->doCurlPostRequest($this->_url, $headers);
         } catch (ClientException $ce) {
@@ -1255,6 +1283,12 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
 
         return json_encode(($payload));
+    }
+
+
+    public function callApi2()
+    {
+        $this->makeGuzzleRequest();
     }
 
 }

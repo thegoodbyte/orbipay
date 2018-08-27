@@ -19,11 +19,11 @@ class FundingAccount implements OrbiPayFundingAccountInterface
     CONST ACCOUNT_TYPE_CARD_DEBIT = 'debit_card';
     CONST ACCOUNT_TYPE_CARD_CREDIT = 'credit_card';
 
-    private $orbiPayReqeust = null;
+    private $orbiPayRequest = null;
 
     public function __construct(OrbiPayRequestInterface $opri)
     {
-        $this->orbiPayReqeust = $opri;
+        $this->orbiPayRequest = $opri;
     }
 
     /**
@@ -79,7 +79,7 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
 
 
-        $response = $this->orbiPayReqeust->callApi2();//$input);
+        $response = $this->orbiPayRequest->callApi2();//$input);
 
         return $response;
     }
@@ -120,18 +120,18 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
         $payload['account_type'] = self::ACCOUNT_TYPE_CARD_CREDIT;
 
-        $this->orbiPayReqeust->setUri('/payments/v1/customers/' . $customerId . '/fundingaccounts');
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/fundingaccounts');
 
-        $this->orbiPayReqeust->setMethod('POST');
+        $this->orbiPayRequest->setMethod('POST');
 
-        $this->orbiPayReqeust->setHeaderRequestor($customerId);
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
 
-        $this->orbiPayReqeust->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+        $this->orbiPayRequest->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
 
-        $this->orbiPayReqeust->setPayload ($payload);
+        $this->orbiPayRequest->setPayload ($payload);
 
 
-        $response  = $this->orbiPayReqeust->makeGuzzleRequest();
+        $response  = $this->orbiPayRequest->makeGuzzleRequest();
 
         return $response;
 
@@ -167,7 +167,7 @@ class FundingAccount implements OrbiPayFundingAccountInterface
      */
     private function checkCreateAccountPayload($payload)
     {
-        
+
         $requiredFields = [
             'account_holder_name', 'nickname', 'address', 'account_number',
             'expiry_date', 'card_cvv_number', 'comments'
@@ -191,6 +191,101 @@ class FundingAccount implements OrbiPayFundingAccountInterface
             }
         }
 
+
+    }
+
+
+    /**
+     * Creates checking account
+     *
+     * @param $customerId
+     * @param $payload
+     * @return mixed
+     */
+    public function createCheckingAccount($customerId, $payload)
+    {
+
+        $this->checkCreateCheckingAccountPayload($payload);
+
+        //$this->_uri = '/payments/v1/customers/' . $customerId . '/fundingaccounts';
+        $uri = '/payments/v1/customers/' . $customerId . '/fundingaccounts';
+        $this->orbiPayRequest->setUri($uri);
+
+        $this->orbiPayRequest->setMethod('POST');
+
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
+
+        $this->orbiPayRequest->setHeaderContentType (OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+        $this->orbiPayRequest->setPayload($payload);
+
+        //return $this->makeGuzzleRequest();
+        return $this->orbiPayRequest->callApi2();
+    }
+
+
+    /**
+     *
+     * Checks the neccessary paylod field for Checking account creation
+     *
+     * @param $payload
+     * @throws \Exception
+     */
+    private function checkCreateCheckingAccountPayload($payload)
+    {
+
+        $requiredFields = [
+            'account_holder_name', 'nickname', 'address', 'account_number',
+            'comments'
+        ];
+
+        $requiredFieldsAddress = [
+            'address_line1', 'address_city', 'address_state', 'address_country',
+            'address_zip1'
+        ];
+
+
+        foreach ($requiredFields as $field) {
+            if (empty($payload[$field])) {
+                throw new \Exception("Payload field '$field' is empty or missing");
+            }
+        }
+
+        foreach ($requiredFieldsAddress as $field) {
+            if (empty($payload['address'])) {
+                throw new \Exception("Payload field 'address.$field' is empty or missing");
+            }
+        }
+
+
+    }
+
+
+    /**
+     * @param $customerId
+     * @param $fundingAccountId
+     * @return mixed
+     */
+    public function deleteCustomerAccount($customerId, $fundingAccountId){
+
+
+
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/fundingaccounts/' . $fundingAccountId);
+
+        $this->orbiPayRequest->setMethod('DELETE');
+
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
+
+        $this->orbiPayRequest->setHeaderContentType (OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+        $this->orbiPayRequest->setPayload ([
+
+            "comments" => "No more needed"
+
+        ]);
+
+
+        return $this->orbiPayRequest->callApi2();
     }
 
 }
