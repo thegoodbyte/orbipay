@@ -113,7 +113,7 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
                     ];
      */
-    public function createCcAccount($customerId, $payload)
+    public function createCreditCardAccount($customerId, $payload)
     {
 
         $this->checkCreateAccountPayload($payload);
@@ -190,7 +190,7 @@ class FundingAccount implements OrbiPayFundingAccountInterface
                 throw new \Exception("Payload field 'address.$field' is empty or missing");
             }
         }
-        
+
     }
 
 }
