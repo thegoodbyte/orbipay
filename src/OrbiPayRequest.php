@@ -83,7 +83,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     private $_clientKey = '';
     private $_headerConntentType = self::HEADER_CONTENT_TYPE_APPLICATION_JSON;
 
-    private $isMultiPartRequest = false;
+    public $isMultiPartRequest = false;
 
     /**
      * @var string
@@ -244,7 +244,95 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
         ];
 
 
-        $response = null;
+        $response = ['status' => 'success'];
+        try {
+
+            $guzzleOptions = [
+                'headers' => $headers
+            ];
+
+            if ($this->isMultiPartRequest ==true) {
+                $guzzleOptions['multipart'] = $this->getMultipartPayload();
+            } else {
+                $guzzleOptions['body'] = $this->getSignaturePayload();
+            }
+
+            //dd($guzzleOptions);
+            //  print_r($this->_debugRequest);
+
+            $guzzleResponse = $client->request($this->_method, $this->_url, $guzzleOptions);
+            $response['data'] = \GuzzleHttp\json_decode($guzzleResponse->getBody()->getContents());
+
+
+
+//            print_r($this->_debugRequest);
+//
+//            print_r(json_decode($body->getContents()));
+
+            //return $response;//->getBody()->getContents();
+
+
+        } catch (ClientException $ce) {
+
+            $response['status'] = 'error';
+
+            $response['message'] = 'Call to the OrbiPay API returned an error';
+
+            $errorResponse = json_decode($ce->getResponse()->getBody()->getContents());
+
+            if (isset ($errorResponse->errors[0])) {
+
+                $response['error'] = $errorResponse->errors[0];
+
+            } else {
+                $response['error']['message'] = $ce->getMessage();
+            }
+
+            dd($this->_debugRequest);
+
+        } catch (Exception $e) {
+
+            $response['status'] = 'error';
+
+            $response['message'] = 'Call to the OrbiPay API returned an error';
+
+            $errorResponse = json_decode($e->getResponse()->getBody()->getContents());
+
+            if (isset ($errorResponse->errors[0])) {
+                $response['error'] = $errorResponse->errors[0];
+            }
+        }
+
+        return $response;
+
+
+    }
+
+    private function makeGuzzleRequest2()
+    {
+
+
+        $response = ['status' => 'success'];
+
+        $this->_url = self::URL . $this->_uri . $this->_queryString;
+
+        $client = new Client(['base_uri' => $this->_url]);
+
+        $headers = $this->buildRequestHeaders();
+
+        $this->_debugRequest = [
+            'url'               => $this->_url,
+            'payload'           => $this->_payload,
+            'input'             => $this->getSignatureInput(),
+            'signature'         => $this->_signature,
+            'headers'           => $this->_headers,
+            'signatureHeaders'  => $this->getSignatureHeaders(),
+            'authHeader'        => $this->getAuthHeaderString($this->_signature),
+            'allHeaders'        => $headers
+
+        ];
+
+
         try {
 
             $guzzleOptions = [
@@ -260,23 +348,33 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
             //dd($guzzleOptions);
 
 
-            $response = $client->request($this->_method, $this->_url, $guzzleOptions);
+            $guzzleResponse = $client->request($this->_method, $this->_url, $guzzleOptions);
 
-            $body = ($response->getBody());
+            $body = ($guzzleResponse->getBody());
 
             print_r($this->_debugRequest);
 
             print_r(json_decode($body->getContents()));
 
-            return $response->getBody()->getContents();
+            $response['data']  = \GuzzleHttp\json_decode($guzzleResponse->getBody()->getContents());
 
             // $response =   $this->doCurlPostRequest($this->_url, $headers);
         } catch (ClientException $ce) {
 
-            echo 'Client Exception ' . $ce->getMessage();
+            //echo 'Client Exception ' . $ce->getMessage();
+            $response['status'] = 'error';
+            $response['data']   = \GuzzleHttp\json_decode($ce->getResponse()->getBody()->getContents());
+            echo __LINE__;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            //echo $e->getMessage();
+            $response['status'] = 'error';
+            $response['data']   = \GuzzleHttp\json_decode($e->getResponse()->getBody()->getContents());
+        } finally {
+            echo __LINE__;
+            return $response;
         }
+
+
 
 
     }
@@ -1288,7 +1386,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
 
     public function callApi2()
     {
-        $this->makeGuzzleRequest();
+        return $this->makeGuzzleRequest();
     }
 
 }

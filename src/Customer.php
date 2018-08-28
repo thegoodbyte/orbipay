@@ -8,6 +8,7 @@
 
 namespace thegoodbyte\orbipay;
 
+use Dompdf\Exception;
 use thegoodbyte\orbipay\OrbiPayRequest;
 use thegoodbyte\orbipay\OrbiPayCustomerInterface;
 use thegoodbyte\orbipay\OrbiPayRequestInterface;
@@ -17,6 +18,8 @@ use thegoodbyte\orbipay\OrbiPayRequestInterface;
 
 class Customer implements OrbiPayCustomerInterface
 {
+
+    private $orbiPayRequest = null;
 
     /**
      * IF the values are empty  - do not sent to the service
@@ -215,6 +218,11 @@ class Customer implements OrbiPayCustomerInterface
 
     private $customerAccount = null;
 
+
+    public function __construct(OrbiPayRequest $opri)
+    {
+        $this->orbiPayRequest = $opri;
+    }
 
 
     public function setComments($comments)
@@ -594,56 +602,226 @@ class Customer implements OrbiPayCustomerInterface
     }
 
 
-    public function createCustomer()
+    /**
+     * @param array $payload
+     * @return array|void
+     */
+    public function createCustomer( $payload)
     {
-        $OrbiPayRequest = new OrbiRequest();
-       // $OrbiPayRequest->
+        try {
+
+            $this->checkPayload($payload);
+
+            $this->orbiPayRequest->setUri('/payments/v1/customers');
+
+            $this->orbiPayRequest->setMethod('POST');
+
+            $this->orbiPayRequest->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+            $this->orbiPayRequest->setHeaderRequestor('guest');
+
+            $this->orbiPayRequest->setPayLoad($payload);
+
+            $response = $this->orbiPayRequest->callApi2();
+
+        } catch (Exception $e) {
+
+            $response = ['status' => 'error', 'message' => $e->getMessage()];
+
+        }
+
+        return $response;
+
     }
 
-    public function getCustomer(OrbiPayRequestInterface $OrbiPayRequest)
+    public function getCustomer($customerId)
     {
        // $OrbiPayRequest = new OrbiPayRequest();
 
-        $customerId         = '16614027';
+        //$customerId         = '16614027';
 
-        $OrbiPayRequest->setUri('/payments/v1/customers/' . $customerId);
+        $input['uri'] = '/payments/v1/customers/' . $customerId;
 
-        $OrbiPayRequest->setMethod('GET');
+        $input['method'] = 'GET';
 
-        $OrbiPayRequest->setPayload([]);
+        $input['payLoad'] = [];
 
-        $OrbiPayRequest->setHeaderRequestor($customerId);
+        $input['headerRequestor'] = $customerId;
 
-        $OrbiPayRequest->setHeaderContentType(OrbipayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+        $input['headerContentType'] = OrbipayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON;
 
-        print_r($OrbiPayRequest);
+        echo __FILE__ . ' ' . __LINE__. '<br />';
+        print_r($input);
 
-        $response = $OrbiPayRequest->callApi();
+//        $customerId         = '16614027';
+//        $this->_uri         = '/payments/v1/customers/' . $customerId;
+//        $this->_method      = 'GET';
+//
+//        $this->_payload = [];
+//
+//        $this->_headerRequetor = $customerId;
+//
+//        $this->_headerConntentType  = self::HEADER_CONTENT_TYPE_APPLICATION_JSON;
+
+
+
+        $response = $this->orbiPayRequest->callApi($input);
 
         return $response;
     }
 
-    public function listFundingAccounts(OrbiPayRequestInterface $or)
+    public function listCustomers($accountNumber, $customerReference)
     {
-        //POST /customers/{ID_CUSTOMER}/fundingaccounts/lists
-        $customerId = '16614027';
-        $input['uri'] = '/payments/v1/customers/' . $customerId . '/fundingaccounts/lists';
 
-        $input['method'] = 'POST';
+        $this->orbiPayRequest->setMethod('POST');
+        $this->orbiPayRequest->setUri('/payments/v1/customers/lists');
 
-        $input['headerRequestor'] = $customerId;
+        $this->orbiPayRequest->setPayload([
+            'account_number'        => $accountNumber,
+            'customer_reference'    => $customerReference
+            ]
+        );
 
-        $input['headerConntentType'] = OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_FORM_URL_ENCODED;
+        $this->orbiPayRequest->setHeaderRequestor('guest');
+        $this->orbiPayRequest->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_FORM_URL_ENCODED);
 
-        $input['payload'] = [];
+        $this->orbiPayRequest->isMultiPartRequest = true;
 
-        $input['isMultiPartRequest'] = true;
+        $response = $this->orbiPayRequest->callApi2();
 
-
-
-        $response = $or->doCallApi($input);
-
-        dd($response);
-
+        return $response;
     }
+
+
+    /**
+     * @param $payload
+     *
+     *
+     * PayLoad Example:
+             [
+            'customer_accounts' => [
+                0 => [
+                    'account_holder_name' => 'Martin Halla 2',
+                    'nickname' => 'halladesign',
+                    'address' => [
+                        'address_line1'     => '399 Scenic Drive',
+                        // 'address_line2'             => '',
+                        'address_city'      => 'Albrightsville',
+                        'address_state'     => 'PA',
+                        'address_country'   => 'USA',
+                        'address_zip1'      => '18210',
+                        //  'address_zip2'              => '',
+                    ],
+                    'customer_account_reference'    => 'ha-123',
+                    'account_number'                => '123472' . rand(1, 100), // must increment
+                    'current_balance'               => '0',
+                    'current_statement_balance'     => '0',
+                    'minimum_payment_due'           => '100',
+                    'past_amount_due'               => '0',
+                    'payment_due_date'              => $paymentDueDate,
+                    'statement_date'                => '2017-08-01',
+
+                    // 'custom_fields'                 => [],
+                    ]
+            ],
+            'comments'          => 'Some comments',
+            'customer_reference'    => 'mh76-1',
+            'first_name'        => 'Martin',
+            'last_name'         => 'Halla2',
+            //  'middle_name'           => '',
+            'gender'            => 'male',
+            'date_of_birth'     => '1990-01-01',
+            'ssn'               => '123456789', // no hyphens
+            //'locale'                => '',
+            'email'             => 'martin@hawthorne-advisors.com',
+            // 'home_phone'            => '',
+            // 'work_phone'            => '',
+            'mobile_phone'      => '9177413162', // no hyphens
+            'address_line1'     => '399 Scenic Drive',
+            // 'address_line2'             => '',
+            'address_city'      => 'Albrightsville',
+            'address_state'     => 'PA',
+            'address_country'   => 'USA',
+            'address_zip1'      => '18210',
+     *
+     */
+    private function checkPayload($payload)
+    {
+
+
+            $requiredFieldsCustomer = [
+                'customer_accounts',
+                'comments',
+                'customer_reference',
+                'first_name',
+                'last_name',
+                'gender',
+                'date_of_birth',
+                'ssn',
+                'email',
+                'mobile_phone',
+                'address_line1',
+                'address_city',
+                'address_state',
+                'address_country',
+                'address_zip1'
+            ];
+
+        $requiredFieldsAccount = [
+            'account_holder_name',
+            'nickname',
+
+            'customer_account_reference',
+            'account_number',
+            'current_balance',
+            'current_statement_balance',
+            'minimum_payment_due',
+            'past_amount_due',
+            'payment_due_date',
+            'statement_date'
+        ];
+
+        $requiredFieldsAccountAddress = [
+
+                'address_line1',
+                'address_city',
+                'address_state',
+                'address_country',
+                'address_zip1'
+        ];
+
+        foreach ($requiredFieldsCustomer as $field) {
+            if (empty($payload[$field])) {
+                throw new \Exception("Missing or empty Customer field: '$field'");
+            }
+        }
+
+        foreach ($requiredFieldsAccount as $field) {
+            foreach ($payload['customer_accounts'] as $index => $data) {
+
+                if (! isset($payload['customer_accounts'][$index][$field])) {
+                    throw new \Exception("Missing or empty Customer account field: 'customer_accounts'.'$index'.'$field'");
+                }
+            }
+        }
+
+        foreach ($requiredFieldsAccountAddress as $field) {
+            foreach ($payload['customer_accounts'] as $index => $data) {
+
+                if (empty($payload['customer_accounts'][$index]['address'])) {
+                    throw new \Exception("Missing or empty 'customer_accounts'.'$index'.'address' data");
+                }
+
+                if (empty($payload['customer_accounts'][$index]['address'][$field])) {
+                    throw new \Exception("Missing or empty Customer account address field: 'customer_accounts'.'$index'.'address'.'$field'");
+                }
+
+            }
+        }
+    }
+
+
+
+
+
 }
