@@ -257,19 +257,10 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
                 $guzzleOptions['body'] = $this->getSignaturePayload();
             }
 
-            //dd($guzzleOptions);
-            //  print_r($this->_debugRequest);
-
             $guzzleResponse = $client->request($this->_method, $this->_url, $guzzleOptions);
+
             $response['data'] = \GuzzleHttp\json_decode($guzzleResponse->getBody()->getContents());
 
-
-
-//            print_r($this->_debugRequest);
-//
-//            print_r(json_decode($body->getContents()));
-
-            //return $response;//->getBody()->getContents();
 
 
         } catch (ClientException $ce) {
@@ -288,7 +279,8 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
                 $response['error']['message'] = $ce->getMessage();
             }
 
-            dd($this->_debugRequest);
+           // echo __LINE__;
+           // dd($this->_debugRequest);
 
         } catch (Exception $e) {
 
@@ -345,32 +337,24 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
                 $guzzleOptions['body'] = $this->getSignaturePayload();
             }
 
-            //dd($guzzleOptions);
-
-
             $guzzleResponse = $client->request($this->_method, $this->_url, $guzzleOptions);
 
             $body = ($guzzleResponse->getBody());
 
-            print_r($this->_debugRequest);
-
-            print_r(json_decode($body->getContents()));
-
             $response['data']  = \GuzzleHttp\json_decode($guzzleResponse->getBody()->getContents());
 
-            // $response =   $this->doCurlPostRequest($this->_url, $headers);
         } catch (ClientException $ce) {
 
-            //echo 'Client Exception ' . $ce->getMessage();
             $response['status'] = 'error';
+
             $response['data']   = \GuzzleHttp\json_decode($ce->getResponse()->getBody()->getContents());
-            echo __LINE__;
+
         } catch (Exception $e) {
             //echo $e->getMessage();
             $response['status'] = 'error';
             $response['data']   = \GuzzleHttp\json_decode($e->getResponse()->getBody()->getContents());
         } finally {
-            echo __LINE__;
+
             return $response;
         }
 
@@ -473,76 +457,7 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     }
 
 
-    /**
-     * /payments/fundingaccounts/create/checking
-     * Working: YES
-     */
 
-    public function createFundingAccountChecking()
-
-    {
-        $customerId = '16614027';
-
-        $this->_uri = '/payments/v1/customers/' . $customerId . '/fundingaccounts';
-
-        $this->_method = 'POST';
-
-        $this->_headerRequetor = $customerId;
-
-        $this->_headerConntentType = self::HEADER_CONTENT_TYPE_APPLICATION_JSON;
-
-        $this->_payload = [
-
-            "account_holder_name" => "Martin Halla",
-            "nickname" => "my Checking account",
-            "address" => [
-                'address_line1' => '123 Main street',
-                //  'address_line2' => '',
-                'address_city' => 'Warren',
-                'address_state' => 'NJ',
-                'address_country' => 'USA',
-                'address_zip1' => '07059',
-                //'address_zip2' => '',
-            ],
-            'account_type' => self::ACCOUNT_TYPE_BANK,
-            "account_number" => "12356789",
-            "aba_routing_number" => "031000503",
-            //"expiry_date"           =>  "02/20",
-            "account_holder_type" => "personal",
-            // "custom_fields"         =>  [],
-            "account_subtype" => self::ACCOUNT_SUBTYPE_CHECKING,
-            //"card_cvv_number"       =>  "123",
-            "comments" => "string"
-
-        ];
-
-
-        $this->makeGuzzleRequest();
-    }
-
-
-    /**
-     * /payments/fundingaccounts/list
-     * Working:: YES
-     */
-    public function listFundingACcounts()
-    {
-        //POST /customers/{ID_CUSTOMER}/fundingaccounts/lists
-        $customerId = '16614027';
-        $this->_uri = '/payments/v1/customers/' . $customerId . '/fundingaccounts/lists';
-
-        $this->_method = 'POST';
-
-        $this->_headerRequetor = $customerId;
-
-        $this->_headerConntentType = self::HEADER_CONTENT_TYPE_APPLICATION_FORM_URL_ENCODED;
-
-        $this > $this->_payload = [];
-
-        $this->makeGuzzleRequest();
-
-
-    }
 
     /**
      * /payments/fundingaccounts/get
@@ -1158,6 +1073,11 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
     public function setHeaderContentType($headerContentType)
     {
         $this->_headerConntentType  = $headerContentType;
+    }
+
+    public function setQueryString($queryString)
+    {
+        $this->_queryString = $queryString;
     }
 
 

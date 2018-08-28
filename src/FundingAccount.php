@@ -59,27 +59,22 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
     }
 
-    public function getCustomerAccount($customerId)
+    public function getCustomerAccount($customerId, $fundingAccountNumberId)
     {
-        $fundingAccountNumberId = '15897068';
 
-        $input['uri'] = '/payments/v1/customers/' . $customerId . '/fundingaccounts/' . $fundingAccountNumberId;
+        $this->orbiPayRequest->setUri ('/payments/v1/customers/' . $customerId . '/fundingaccounts/' . $fundingAccountNumberId);
 
-        $input['method'] = 'GET';
+        $this->orbiPayRequest->setMethod ('GET');
 
-        $input['headerRequestor'] = $customerId;
+        $this->orbiPayRequest->setHeaderRequestor ($customerId);
 
-        $input['headerContentType'] = OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON;
+        $this->orbiPayRequest->setHeaderContentType (OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
 
-        $input['payload'] = [];
+        $this->orbiPayRequest->setPayload([]);
 
-        $input['queryString'] = '';
+        $this->orbiPayRequest->setQueryString ('');
 
-      //  $response = OrbiPayRequest::staticMakeRequest($input);
-
-
-
-        $response = $this->orbiPayRequest->callApi2();//$input);
+        $response = $this->orbiPayRequest->callApi2();
 
         return $response;
     }
@@ -130,8 +125,7 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
         $this->orbiPayRequest->setPayload ($payload);
 
-
-        $response  = $this->orbiPayRequest->makeGuzzleRequest();
+        $response  = $this->orbiPayRequest->callApi2();
 
         return $response;
 
@@ -207,8 +201,8 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
         $this->checkCreateCheckingAccountPayload($payload);
 
-        //$this->_uri = '/payments/v1/customers/' . $customerId . '/fundingaccounts';
         $uri = '/payments/v1/customers/' . $customerId . '/fundingaccounts';
+
         $this->orbiPayRequest->setUri($uri);
 
         $this->orbiPayRequest->setMethod('POST');
@@ -219,8 +213,8 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
         $this->orbiPayRequest->setPayload($payload);
 
-        //return $this->makeGuzzleRequest();
         return $this->orbiPayRequest->callApi2();
+
     }
 
 
