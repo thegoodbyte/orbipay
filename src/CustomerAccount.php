@@ -59,6 +59,10 @@ class CustomerAccount implements OrbiPayCustomerAccountInterface
         return ($response);
     }
 
+    public function getDebugInfo(){
+        return $this->orbiPayRequest->getDebugInfo();
+    }
+
 
 
 

@@ -21,4 +21,6 @@ interface OrbiPayPaymentInterface
 
     public function listPayments($customerId, $fundingAccountId);
 
+    public function getDebugInfo();
+
 }

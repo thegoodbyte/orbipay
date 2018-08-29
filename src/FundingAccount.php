@@ -307,4 +307,8 @@ class FundingAccount implements OrbiPayFundingAccountInterface
         return $response;
     }
 
+    public function getDebugInfo(){
+        return $this->orbiPayRequest->getDebugInfo();
+    }
+
 }

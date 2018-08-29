@@ -814,7 +814,9 @@ class Customer implements OrbiPayCustomerInterface
         }
     }
 
-
+    public function getDebugInfo(){
+        return $this->orbiPayRequest->getDebugInfo();
+    }
 
 
 

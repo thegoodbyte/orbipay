@@ -58,9 +58,25 @@ class PaymentSetup implements OrbiPayPaymentSetupInterface
 
     }
 
+    /**
+     * @param $customerId
+     * @param $paymentSetupId
+     * @return mixed
+     */
     public function deletePaymentSetup( $customerId, $paymentSetupId)
     {
 
+        $this->orbiPayRequest->setMethod('DELETE');
+
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/paymentsetups/' . $paymentSetupId);
+
+        $this->orbiPayRequest->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
+
+        $response = $this->orbiPayRequest->callApi2();
+
+        return $response;
     }
 
     /**
@@ -84,5 +100,9 @@ class PaymentSetup implements OrbiPayPaymentSetupInterface
 
         return $response;
 
+    }
+
+    public function getDebugInfo(){
+        return $this->orbiPayRequest->getDebugInfo();
     }
 }

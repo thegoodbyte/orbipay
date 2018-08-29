@@ -20,5 +20,7 @@ interface OrbiPayPaymentSetupInterface
 
     public function listPaymentSetups($customerId);
 
+    public function getDebugInfo();
+
 
 }

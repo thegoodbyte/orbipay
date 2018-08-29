@@ -18,5 +18,7 @@ interface OrbiPayCustomerAccountInterface
 
     public function listCustomerAccounts($customerId);
 
+    public function getDebugInfo();
+
 
 }

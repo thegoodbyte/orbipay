@@ -16,5 +16,7 @@ interface OrbiPayFundingAccountInterface
 
     public function updateCustomerAccount($customerId, $fundingAccountNumberId, $payload);
 
+    public function getDebugInfo();
+
 
 }

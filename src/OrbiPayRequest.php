@@ -651,5 +651,9 @@ class OrbiPayRequest implements  OrbiPayRequestInterface
         return $this->makeGuzzleRequest();
     }
 
+    public function getDebugInfo()
+    {
+        return $this->_debugRequest;
+    }
 }
 

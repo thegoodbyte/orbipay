@@ -148,5 +148,9 @@ class Payment implements OrbiPayPaymentInterface
         return $response;
     }
 
+    public function getDebugInfo(){
+        return $this->orbiPayRequest->getDebugInfo();
+    }
+
 
 }
