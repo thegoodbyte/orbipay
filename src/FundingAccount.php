@@ -35,30 +35,31 @@ class FundingAccount implements OrbiPayFundingAccountInterface
     public function listCustomerAccounts($customerId)
     {
 
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/fundingaccounts/lists');
 
-        $input['uri'] = '/payments/v1/customers/' . $customerId . '/fundingaccounts/lists';
+        $this->orbiPayRequest->setMethod('POST');
 
-        $input['method'] = 'POST';
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
 
-        $input['headerRequestor'] = $customerId;
+        $this->orbiPayRequest->setheaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_FORM_URL_ENCODED);
 
-        $input['headerContentType'] = OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_FORM_URL_ENCODED;
+        $this->orbiPayRequest->setPayload('');
 
-        $input['payload'] = '';
+        $this->orbiPayRequest->setisMultiPartRequest= true;
 
-        $input['isMultiPartRequest'] = true;
+        $this->orbiPayRequest->setqueryString('');
 
-        $input['queryString'] = '';
-
-
-
-        //$response = $this->orbiPayReqeust->callApi($input);
-        $response = OrbiPayRequest::staticMakeRequest($input);
+        $response = $this->orbiPayRequest->callApi2();
 
         return $response;
 
     }
 
+    /**
+     * @param $customerId
+     * @param $fundingAccountNumberId
+     * @return mixed
+     */
     public function getCustomerAccount($customerId, $fundingAccountNumberId)
     {
 
@@ -280,6 +281,34 @@ class FundingAccount implements OrbiPayFundingAccountInterface
 
 
         return $this->orbiPayRequest->callApi2();
+    }
+
+
+    /**
+     * @param $customerId
+     * @param $fundingAccountNumberId
+     * @param $payload
+     * @return mixed
+     */
+    public function updateCustomerAccount($customerId, $fundingAccountNumberId, $payload)
+    {
+        $customerId = '16614027';
+
+        $fundingAccountNumberId = '15897068';
+
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/fundingaccounts/' . $fundingAccountNumberId);
+
+        $this->orbiPayRequest->setMethod('PUT');
+
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
+
+        $this->orbiPayRequest->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+        $this->orbiPayRequest->setPayload($payload);
+
+        $response = $this->orbiPayRequest->callApi2();
+
+        return $response;
     }
 
 }
