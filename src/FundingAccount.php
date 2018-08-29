@@ -8,8 +8,8 @@
 
 namespace thegoodbyte\orbipay;
 
-use thegoodbyte\orbipay\OrbiPayFundingAccountInterface;
-use thegoodbyte\orbipay\OrbiPayRequestInterface;
+//use thegoodbyte\orbipay\OrbiPayFundingAccountInterface;
+//use thegoodbyte\orbipay\OrbiPayRequestInterface;
 
 
 class FundingAccount implements OrbiPayFundingAccountInterface

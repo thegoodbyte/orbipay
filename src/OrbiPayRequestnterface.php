@@ -13,7 +13,7 @@ interface OrbiPayRequestInterface
 {
 
 
-    public function callApi();
+    public function callApi($input);
 
 
 

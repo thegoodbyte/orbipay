@@ -603,6 +603,8 @@ class Customer implements OrbiPayCustomerInterface
 
 
     /**
+     * Creates a Customer
+     *
      * @param array $payload
      * @return array|void
      */
@@ -634,38 +636,30 @@ class Customer implements OrbiPayCustomerInterface
 
     }
 
+    /**
+     * Gets Customer's information
+     *
+     * @param $customerId
+     * @return array
+     */
     public function getCustomer($customerId)
     {
-       // $OrbiPayRequest = new OrbiPayRequest();
 
-        //$customerId         = '16614027';
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId);
 
-        $input['uri'] = '/payments/v1/customers/' . $customerId;
+        $this->orbiPayRequest->setMethod      = 'GET';
 
-        $input['method'] = 'GET';
+        $this->orbiPayRequest->setPayload([]);
 
-        $input['payLoad'] = [];
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
 
-        $input['headerRequestor'] = $customerId;
+        $this->orbiPayRequest->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
 
-        $input['headerContentType'] = OrbipayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON;
+        $response = $this->orbiPayRequest->callApi2();
 
-        echo __FILE__ . ' ' . __LINE__. '<br />';
-        print_r($input);
-
-//        $customerId         = '16614027';
-//        $this->_uri         = '/payments/v1/customers/' . $customerId;
-//        $this->_method      = 'GET';
-//
-//        $this->_payload = [];
-//
-//        $this->_headerRequetor = $customerId;
-//
-//        $this->_headerConntentType  = self::HEADER_CONTENT_TYPE_APPLICATION_JSON;
-
-
-
-        $response = $this->orbiPayRequest->callApi($input);
+        if ($response['status'] == 'success') {
+            $response['message'] = 'Customer data retrieved';
+        }
 
         return $response;
     }
