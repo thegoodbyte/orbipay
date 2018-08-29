@@ -20,10 +20,41 @@ class PaymentSetup implements OrbiPayPaymentSetupInterface
     public function createPaymentSetup($customerId, $fundingAccountNumberId, $customerAccountId, $payload)
     {
 
+        $this->orbiPayRequest->setMethod('POST');
+
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/paymentsetups');
+
+        $this->orbiPayRequest->setHeaderContentType (OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
+
+        $this->orbiPayRequest->setPayload($payload);
+
+        $response = $this->orbiPayRequest->callApi2();
+
+        dd($response);
     }
 
-    public function getPaymentSetup($customerId, $paymentSetupId)
+
+    /**
+     * @param $customerId
+     * @param $paymentSetupId
+     * @return mixed
+     */
+    public function getPaymentSetup($customerId, $paymentSetupId = '')
     {
+
+        $this->orbiPayRequest->setMethod('GET');
+
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/paymentsetups/' . $paymentSetupId);
+
+        $this->orbiPayRequest->setHeaderContentType(OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
+
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
+
+        $response = $this->orbiPayRequest->callApi2();
+
+        return $response;
 
     }
 

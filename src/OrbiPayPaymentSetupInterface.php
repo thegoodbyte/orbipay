@@ -14,7 +14,7 @@ interface OrbiPayPaymentSetupInterface
 
     public function createPaymentSetup($customerId, $fundingAccountNumberId, $customerAccountId, $payload);
 
-    public function getPaymentSetup($customerId, $paymentSetupId);
+    public function getPaymentSetup($customerId, $paymentSetupId = '');
 
     public function deletePaymentSetup( $customerId, $paymentSetupId);
 
