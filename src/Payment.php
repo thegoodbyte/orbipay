@@ -53,7 +53,7 @@ class Payment implements OrbiPayPaymentInterface
     public function getPayment($customerId, $paymentId)
     {
 
-        $this->orbiPayRequest->setHeaderRequestor = $customerId;
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
 
         $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/payments/' . $paymentId);
 
@@ -105,22 +105,20 @@ class Payment implements OrbiPayPaymentInterface
      */
     public function deletePayment($customerId, $paymentId)
     {
-        $customerId = '16614027';
 
-        $paymentId = '7868145';
+        $this->orbiPayRequest->setUri('/payments/v1/customers/' . $customerId . '/payments/' . $paymentId);
 
-        $this->orbiPayRequest->set_uri = '/payments/v1/customers/' . $customerId . '/payments/' . $paymentId;
+        $this->orbiPayRequest->setMethod('DELETE');
 
-        $this->orbiPayRequest->set_method = 'DELETE';
+        $this->orbiPayRequest->setHeaderContentType (OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON);
 
-        $this->orbiPayRequest->set_headerConntentType = OrbiPayRequest::HEADER_CONTENT_TYPE_APPLICATION_JSON;
-
-        $this->_payload = [
+        $this->orbiPayRequest->setPayload([
             'comments' => 'some comments'
-        ];
-        $this->orbiPayRequest->set_headerRequetor = $customerId;
+        ]);
 
-        $response = $this->orbiPayRequest->callApi();
+        $this->orbiPayRequest->setHeaderRequestor($customerId);
+
+        $response = $this->orbiPayRequest->callApi2();
 
         return $response;
     }
