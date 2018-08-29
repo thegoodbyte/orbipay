@@ -15,10 +15,6 @@ namespace thegoodbyte\orbipay;
 class FundingAccount implements OrbiPayFundingAccountInterface
 {
 
-    CONST ACCOUNT_TYPE_BANK = 'bank';
-    CONST ACCOUNT_TYPE_CARD_DEBIT = 'debit_card';
-    CONST ACCOUNT_TYPE_CARD_CREDIT = 'credit_card';
-
     private $orbiPayRequest = null;
 
     public function __construct(OrbiPayRequestInterface $opri)

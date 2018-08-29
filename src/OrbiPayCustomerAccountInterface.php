@@ -8,9 +8,6 @@
 
 namespace thegoodbyte\orbipay;
 
-use Customer;
-
-
 interface OrbiPayCustomerAccountInterface
 {
 

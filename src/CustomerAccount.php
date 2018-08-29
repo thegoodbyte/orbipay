@@ -10,10 +10,6 @@ namespace thegoodbyte\orbipay;
 
 
 
-
-
-
-
 class CustomerAccount implements OrbiPayCustomerAccountInterface
 {
 
